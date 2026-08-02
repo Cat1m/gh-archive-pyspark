@@ -16,6 +16,11 @@ spark-warehouse/
 metastore_db/
 derby.log
 
+# winutils.exe/hadoop.dll tải từ cdarlint/winutils (Step 3) — binary bên thứ
+# ba, không commit vào repo; xem README.md "Setup Windows: winutils.exe" để
+# tải lại khi cần.
+tools/hadoop/
+
 # Python
 venv/
 __pycache__/

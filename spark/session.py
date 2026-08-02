@@ -4,8 +4,10 @@ Chạy trực tiếp file này (`python spark/session.py`) để xem SparkSessio
 tạo thành công và lấy URL của Spark UI.
 """
 
+import os
 import sys
 import time
+from pathlib import Path
 
 from pyspark.sql import SparkSession
 
@@ -13,6 +15,46 @@ from pyspark.sql import SparkSession
 # crash trên console Windows còn dùng codepage cp1252 mặc định — ép UTF-8 để
 # tránh lỗi này (cùng pattern với ingestion/download_gharchive.py).
 sys.stdout.reconfigure(encoding="utf-8")
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+HADOOP_HOME = PROJECT_ROOT / "tools" / "hadoop"
+
+
+def _configure_windows_hadoop_native() -> None:
+    """Trỏ Spark tới winutils.exe/hadoop.dll (tools/hadoop/bin/) trên Windows.
+
+    Đây KHÔNG phải config của Spark engine — là workaround riêng cho nền tảng
+    Windows. Hadoop (bên dưới Spark) dùng 2 thứ khi ĐỌC/GHI file trên local
+    filesystem của Windows:
+      - HADOOP_HOME: biến môi trường để Hadoop tìm winutils.exe (1 executable
+        JVM gọi qua ProcessBuilder để làm các việc kiểu chmod/ls khi cần set
+        permission cho thư mục — bắt buộc khi ghi Parquet, dù chỉ ghi ra local
+        disk chứ không phải HDFS).
+      - PATH: JVM cần load hadoop.dll (thư viện JNI) qua PATH, KHÔNG tự động
+        suy ra được từ HADOOP_HOME dù cùng thư mục.
+    Thiếu 1 trong 2 sẽ crash lúc .write.parquet() (không phải lúc đọc), với
+    lỗi rất khó đoán (UnsatisfiedLinkError / FileNotFoundException).
+    Không set biến này trên Linux/Mac vì không cần thiết ở đó.
+    """
+    if sys.platform != "win32":
+        return
+
+    hadoop_bin = HADOOP_HOME / "bin"
+    if not (hadoop_bin / "winutils.exe").exists():
+        print(
+            "[spark] CẢNH BÁO: không tìm thấy tools/hadoop/bin/winutils.exe — "
+            "các thao tác GHI file (Bronze/Silver/Gold) sẽ crash trên Windows. "
+            "Xem README.md phần \"Setup Windows: winutils.exe\" để tải."
+        )
+        return
+
+    os.environ.setdefault("HADOOP_HOME", str(HADOOP_HOME))
+    hadoop_bin_str = str(hadoop_bin)
+    if hadoop_bin_str not in os.environ.get("PATH", ""):
+        os.environ["PATH"] = hadoop_bin_str + os.pathsep + os.environ.get("PATH", "")
+
+
+_configure_windows_hadoop_native()
 
 
 def get_spark_session(app_name: str = "gh-archive-pyspark") -> SparkSession:

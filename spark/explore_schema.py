@@ -9,6 +9,11 @@ Usage:
 import sys
 from pathlib import Path
 
+# Tránh crash khi in tiếng Việt có dấu trên console Windows dùng codepage
+# cp1252 mặc định (cùng pattern với spark/session.py) — gap này từng bị bỏ
+# sót, ghi nhận ở docs/data_profiling.md mục 7.
+sys.stdout.reconfigure(encoding="utf-8")
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from spark.session import get_spark_session  # noqa: E402
