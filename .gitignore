@@ -1,0 +1,25 @@
+# Dữ liệu tải về / sinh ra — tái tạo được bằng script, không commit.
+# Dùng "data/raw/*" (ignore NỘI DUNG) chứ không phải "data/raw/" (ignore cả
+# thư mục) — nếu ignore cả thư mục thì dòng "!.../.gitkeep" bên dưới vô tác
+# dụng, vì Git không xét đến file bên trong một thư mục đã bị ignore.
+data/raw/*
+data/bronze/*
+data/silver/*
+data/gold/*
+!data/raw/.gitkeep
+!data/bronze/.gitkeep
+!data/silver/.gitkeep
+!data/gold/.gitkeep
+
+# Spark sinh ra khi chạy local: thư mục warehouse mặc định + metastore Derby
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Notebook checkpoints
+.ipynb_checkpoints/
