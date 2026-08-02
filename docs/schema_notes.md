@@ -73,7 +73,11 @@ per-repo aggregation should expect a long tail.
 - `repo.name` → `repo_name`
 - `repo.id` → `repo_id`
 - `created_at` (string) → `created_at` (timestamp, cast)
-- `payload.commits` (array, PushEvent only) → exploded to one row per commit
+- ~~`payload.commits` (array, PushEvent only) → exploded to one row per
+  commit~~ — **superseded**, this field does not exist in the actual data
+  (GH Archive dropped it from `PushEvent.payload`). See
+  `docs/data_profiling.md` §4.1: the explode example uses
+  `PullRequestEvent.payload.labels` instead.
 - `payload.action`, `payload.ref`, `payload.ref_type` etc. — kept only for
   the event types where they're meaningful; Silver will likely split by
   `type` rather than carrying the full sparse union forward.
